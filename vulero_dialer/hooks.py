@@ -11,7 +11,7 @@ app_license = "mit"
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/vulero_dialer/css/vulero_dialer.css"
-# app_include_js = "/assets/vulero_dialer/js/vulero_dialer.js"
+app_include_js = "/assets/vulero_dialer/js/open_dialer.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/vulero_dialer/css/vulero_dialer.css"
