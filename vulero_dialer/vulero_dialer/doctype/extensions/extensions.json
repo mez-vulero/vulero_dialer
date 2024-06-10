@@ -1,0 +1,88 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:user_link",
+ "creation": "2024-04-08 10:38:06.695934",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "websprix_details_section",
+  "user_link",
+  "extension",
+  "organization_id",
+  "queue_details_section",
+  "join_dtmf",
+  "column_break_vkje",
+  "leave_dtmf"
+ ],
+ "fields": [
+  {
+   "fieldname": "websprix_details_section",
+   "fieldtype": "Section Break",
+   "label": "Websprix Details"
+  },
+  {
+   "fieldname": "user_link",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "User",
+   "options": "User",
+   "unique": 1
+  },
+  {
+   "fieldname": "extension",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Extension"
+  },
+  {
+   "fieldname": "organization_id",
+   "fieldtype": "Data",
+   "label": "Organization ID"
+  },
+  {
+   "fieldname": "queue_details_section",
+   "fieldtype": "Section Break",
+   "label": "Queue Details"
+  },
+  {
+   "fieldname": "join_dtmf",
+   "fieldtype": "Data",
+   "label": "Join DTMF"
+  },
+  {
+   "fieldname": "column_break_vkje",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "leave_dtmf",
+   "fieldtype": "Data",
+   "label": "Leave DTMF"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-06-04 20:54:58.999190",
+ "modified_by": "Administrator",
+ "module": "Vulero Dialer",
+ "name": "Extensions",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
