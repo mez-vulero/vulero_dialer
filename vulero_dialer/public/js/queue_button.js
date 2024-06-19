@@ -1,27 +1,28 @@
 $(document).ready(function() {
-    const joinIconUrl = "https://img.icons8.com/ios/50/40C057/joining-queue.png";
-    const leaveIconUrl = "https://img.icons8.com/ios/50/FA5252/leaving-queue.png";
+    const joinIconUrl = "/assets/vulero_dialer/images/joining-queue.png";
+    const leaveIconUrl = "/assets/vulero_dialer/images/leaving-queue.png";
 
     window.addEventListener('queueEvent', function(e) {
       if(e.detail == 'join_queue') {
         $('#queueIcon').attr('src', leaveIconUrl);
-        $('#queueButton').css('border-color', 'red');
+       // $('#queueButton').css('border-color', 'red');
+        frappe.msgprint('Joined the queue');
       } else if (e.detail == 'leave_queue') {
         $('#queueIcon').attr('src', joinIconUrl);
-        $('#queueButton').css('border-color', 'green');
+        //$('#queueButton').css('border-color', 'green');
+        frappe.msgprint('Left the queue');
       }
     });
 
     function appendQueueButton() {
         let queueButton = $(`
             <li class="nav-item">
-                <button class="btn" id="queueButton" style="border: 1px solid green; background-color: transparent;">
+                <button class="btn" id="queueButton" style="border: none; background-color: transparent;">
                     <img src="${joinIconUrl}" id="queueIcon" width="24" height="24" alt="joining-queue"/>
                 </button>
             </li>
         `);
 
-        console.log("Created Queue Button: ", queueButton);
 
         let bellIcon = $('ul.navbar-nav > li.nav-item.dropdown-notifications');
         if (bellIcon.length === 0) {
@@ -30,7 +31,6 @@ $(document).ready(function() {
             setTimeout(appendQueueButton, 500); // Retry after 500 milliseconds
             return;
         }
-
 
         bellIcon.after(queueButton);
 
@@ -55,7 +55,8 @@ $(document).ready(function() {
                     display: inline-block;
                     margin-left: 10px;
                     background-color: transparent;
-                    border: 1px solid green;
+                    border: none;
+                    padding: 0;
                 }
                 #queueButton:hover {
                     background-color: rgba(0, 0, 0, 0.1);
@@ -63,8 +64,8 @@ $(document).ready(function() {
             </style>
         `);
 
-        console.log("Queue Button appended to Navbar");
     }
 
     appendQueueButton();
 });
+

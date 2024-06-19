@@ -228,6 +228,7 @@ import {
     Registerer,
     RegistererState,
     SessionState,
+    TransportState,
     UserAgent,
 } from "sip.js";
 import { useDraggable, useWindowSize } from '@vueuse/core'
@@ -267,6 +268,8 @@ let activeSession = null;
 let wsDetails = null;
 let sipServer = null;
 let userAgent = null;
+let uaConfig = null;
+let connectAttempt = 0;
 let uri = null;
 let joinDTMF = null;
 let leaveDTMF = null;
@@ -394,6 +397,108 @@ let { style } = useDraggable(callPopup, {
 
 async function startupClient() {
   log.value = 'Requesting Access Token...'
+  ++connectAttempt;
+
+  try {
+    wsDetails = await call('vulero_dialer.config.call_setting.get_user_settings');
+  } catch(e) {
+    console.log("An error occured fetching connection details");
+    wsDetails = null;
+    return;
+  }
+ 
+  let {
+      username,
+      cid_name,
+      ep_pass: password,
+      pri_sip_address: sipServer
+   } = wsDetails.result;
+
+   if (!wsDetails || !wsDetails.result) {
+        console.log("Invalid connection details");
+        return;
+   }
+
+  if(connectAttempt > 3) {
+     sipServer = wsDetails.result.sec_sip_address;
+  }
+
+  const wsServer = `wss://${sipServer}:8089/ws`;
+  uri = UserAgent.makeURI(`sip:${username}@${sipServer}`);
+
+  uaConfig =
+    {
+      uri: uri,
+      media: {
+        remote: {
+          audio: document.getElementById('remoteAudio'),
+        },
+      },
+      delegate: {
+  	    onInvite: onInvite,
+  	    onMessage: function(message) {
+    	    console.log("Received SIP message:", message);
+  	    },
+  	    onRegistered: function() {
+    	    console.log("Successfully registered!");
+  	    },
+          onRegistrationFailed: function(cause) {
+          console.log("Registration failed:", cause);
+        }
+      },
+      transportOptions: {
+        server: wsServer,
+        traceSip: true,
+        keepAliveInterval: 5,
+      },
+      register: true,
+      hackIpInContact: true,
+      authorizationUsername: username,
+      authorizationPassword: password,
+      displayName: cid_name,
+    }
+
+  userAgent = new UserAgent(uaConfig);
+
+  userAgent.transport.stateChange.addListener((newState) => {
+  switch (newState) {
+    case TransportState.Connecting:
+      console.log('Attempting to connect to the server...');
+      break;
+    case TransportState.Connected:
+      console.log('Successfully connected to the server.');
+      window.dispatchEvent(new CustomEvent('statusEvent', {
+        detail: 'connected' 
+      }));
+      break;
+    case TransportState.Disconnecting:
+      console.log('Disconnecting from the server...');
+      window.dispatchEvent(new CustomEvent('statusEvent', {
+        detail: 'disconnecting' 
+      }));
+      break;
+    case TransportState.Disconnected:
+      console.log('Disconnected from the server.');
+      if(connectAttempt < 10) {
+        setTimeout(async () => {
+          await startupClient();
+          console.log("Attempting Re-connection");
+        }, 5000);
+        window.dispatchEvent(new CustomEvent('statusEvent', {
+          detail: 'reconnecting' 
+        }));
+      }
+      window.dispatchEvent(new CustomEvent('statusEvent', {
+        detail: 'disconnected' 
+      }));
+      break;
+    case TransportState.Reconnecting:
+      console.log('Reconnecting to the server...');
+      break;
+    default: console.log('Unknown transport state:', newState);
+      break;
+    }
+  });
 
   try {
     await registerSipUser();
@@ -683,62 +788,7 @@ onMounted(async () => {
 
   navigator.mediaDevices.getUserMedia({audio:true})
 
-  try {
-    wsDetails = await call('vulero_dialer.config.call_setting.get_user_settings');
-  } catch(e) {
-    console.log("An error occured fetching connection details");
-    wsDetails = null;
-    return;
-  }
-// let wsDetails = {"status":"OK","result":{"id":"1149","pkg_id":"2","ep_pass":"pS19WMNVz6wj2a0i","vm_pin":"746390","cid_name":"Mezmure Dawit","extension":"835266","username":"117S835266","pri_sip_public":"196.189.53.123","pri_sip_private":"10.10.11.121","pri_sip_address":"etw-pbx-sip1.websprix.com","sec_sip_public":"196.189.53.124","sec_sip_private":"10.10.11.122","sec_sip_address":"etw-pbx-sip2.websprix.com"}} 
- 
-  const {
-      username,
-      cid_name,
-      ep_pass: password,
-      sec_sip_address:  sipServer
-   } = wsDetails.result;
-
-  const wsServer = `wss://${sipServer}:8089/ws`;
-  uri = UserAgent.makeURI(`sip:${username}@${sipServer}`);
-
-  let uaConfig =
-    {
-      uri: uri,
-      media: {
-        remote: {
-          audio: document.getElementById('remoteAudio'),
-        },
-      },
-      delegate: {
-  	    onInvite: onInvite,
-  	      onMessage: function(message) {
-    	      console.log("Received SIP message:", message);
-  	      },
-  	      onTransportError: function() {
-    	      console.log("Transport Error");
-  	      },
-  	      onRegistered: function() {
-    	      console.log("Successfully registered!");
-  	      },
-            onRegistrationFailed: function(cause) {
-            console.log("Registration failed:", cause);
-          }
-      },
-      transportOptions: {
-        server: wsServer,
-        traceSip: true,
-        keepAliveInterval: 5,
-      },
-      register: true,
-      hackIpInContact: true,
-      authorizationUsername: username,
-      authorizationPassword: password,
-      displayName: cid_name,
-    }
-
-  userAgent = new UserAgent(uaConfig);
-  startupClient()
+  await startupClient()
 
   try {
     let queueSettings = await call('vulero_dialer.config.call_setting.get_queue_settings');
