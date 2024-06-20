@@ -19,9 +19,9 @@
 
   // Set the script's source (src) to the URL of the module you want to load
   link.rel = 'stylesheet'; // Correct relationship attribute for stylesheets
-  link.href = '/assets/vulero_dialer/frontend/assets/index-CqWRXUDw.css';
+  link.href = '/assets/vulero_dialer/frontend/assets/index-Ct7YApqv.css';
   
-  script.src = '/assets/vulero_dialer/frontend/assets/index-BlgPzQAJ.js';
+  script.src = '/assets/vulero_dialer/frontend/assets/index-BJIFll3M.js';
 
   // IMPORTANT: Set the script type to "module"
   script.type = 'module';

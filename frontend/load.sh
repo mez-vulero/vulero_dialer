@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the source and destination paths
-src_file="$HOME/call_loader.js"
+src_file="./call_loader.js"
 dest_dir="$HOME/frappe-bench/apps/vulero_dialer/vulero_dialer/public/frontend"
 assets_dir="${dest_dir}/assets"
 

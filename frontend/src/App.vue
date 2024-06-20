@@ -277,7 +277,9 @@ let leaveDTMF = null;
 async function getOrganizationUsers() {
   organizationUsers.value = [];
   try {
-    organizationUsers = await call('vulero_dialer.config.user_list.fetch_users_to_transfer');
+    organizationUsers = await call('vulero_dialer.config.user_list.fetch_users_to_transfer', {},
+      { headers: { 'X-Frappe-CSRF-Token': window.frappe.csrf_token } }
+    );
     if(organizationUsers.status == "OK") {
       organizationUsers.value = organizationUsers.result;
     }
@@ -288,7 +290,9 @@ async function getOrganizationUsers() {
 async function getContactDetail(number) {
   try {
     const formattedNumber = number.replace(/^\+?251/, '0');
-    const contactInfo = await call('vulero_dialer.config.get_contact.get_contact_info', { formattedNumber }); 
+    const contactInfo = await call('vulero_dialer.config.get_contact.get_contact_info', { formattedNumber },
+      { headers: { 'X-Frappe-CSRF-Token' : window.frappe.csrf_token } }
+    ); 
     if(contactInfo && contactInfo.data.length !== 0 ) {
       contact.value = {
         full_name: contactInfo.data.first_name,
@@ -400,7 +404,9 @@ async function startupClient() {
   ++connectAttempt;
 
   try {
-    wsDetails = await call('vulero_dialer.config.call_setting.get_user_settings');
+    wsDetails = await call('vulero_dialer.config.call_setting.get_user_settings', {}, 
+      { headers: { 'X-Frappe-CSRF-Token': window.frappe.csrf_token } }
+    );
   } catch(e) {
     console.log("An error occured fetching connection details");
     wsDetails = null;
@@ -791,7 +797,9 @@ onMounted(async () => {
   await startupClient()
 
   try {
-    let queueSettings = await call('vulero_dialer.config.call_setting.get_queue_settings');
+    let queueSettings = await call('vulero_dialer.config.call_setting.get_queue_settings', {},
+      { headers: { 'X-Frappe-CSRF-Token': window.frappe.csrf_token } }
+    );
     if(queueSettings) {
       joinDTMF = queueSettings.join_dtmf;
       leaveDTMF = queueSettings.leave_dtmf;

@@ -40,4 +40,5 @@ $(document).ready(function() {
     addCallButton('Opportunity', 'phone', 'mobile_no');
     addCallButton('Contact', 'phone', 'mobile_no');
     addCallButton('Customer', 'phone', 'mobile_no');
+    addCallButton('Student', 'phone', 'mobile_no');
 });
