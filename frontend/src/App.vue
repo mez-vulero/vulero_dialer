@@ -238,8 +238,6 @@ import { onMounted, ref, watch } from 'vue'
 
 const { setMakeCall, setTwilioEnabled, $dialog } = globalStore()
 
-
-
 let log = ref('Connecting...')
 const contact = ref({
   full_name: '',
@@ -273,6 +271,7 @@ let connectAttempt = 0;
 let uri = null;
 let joinDTMF = null;
 let leaveDTMF = null;
+let onlineStatus = 0;
 
 async function getOrganizationUsers() {
   organizationUsers.value = [];
@@ -295,7 +294,7 @@ async function getContactDetail(number) {
     ); 
     if(contactInfo && contactInfo.data.length !== 0 ) {
       contact.value = {
-        full_name: contactInfo.data.first_name,
+        full_name: contactInfo.data.full_name,
         mobile_no: number,
         user_link: `/app/${contactInfo.doc_type}/${contactInfo.data.name}`
       }
@@ -473,17 +472,20 @@ async function startupClient() {
       break;
     case TransportState.Connected:
       console.log('Successfully connected to the server.');
+      onlineStatus = 1;
       window.dispatchEvent(new CustomEvent('statusEvent', {
         detail: 'connected' 
       }));
       break;
     case TransportState.Disconnecting:
+      onlineStatus = 0;
       console.log('Disconnecting from the server...');
       window.dispatchEvent(new CustomEvent('statusEvent', {
         detail: 'disconnecting' 
       }));
       break;
     case TransportState.Disconnected:
+      onlineStatus = 0;
       console.log('Disconnected from the server.');
       if(connectAttempt < 10) {
         setTimeout(async () => {
@@ -601,6 +603,11 @@ function handleDisconnectedIncomingCall() {
 }
 
 async function makeOutgoingCall(number, sipServer) {
+
+  if(!onlineStatus) {
+    window.frappe.msgprint("The user is offline and can't make calls right now");
+    return;
+  }
 
   referer.value = '';
   let dtmfType = number;
