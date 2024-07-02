@@ -86,7 +86,6 @@
             label="Cancel"
             @click="cancelCall"
             class="rounded-lg"
-            :disabled="callStatus == 'initiating'"
           >
             <template #prefix>
               <PhoneIcon class="h-4 w-4 rotate-[135deg] fill-white" />
@@ -280,6 +279,11 @@ async function getOrganizationUsers() {
       { headers: { 'X-Frappe-CSRF-Token': window.frappe.csrf_token } }
     );
     if(organizationUsers.status == "OK") {
+      const currentUser = organizationUsers.result.findIndex(obj => obj['extension'] == wsDetails.result.extension);
+      if (currentUser !== -1) {
+        organizationUsers.result.splice(currentUser, 1);
+      }
+
       organizationUsers.value = organizationUsers.result;
     }
   } catch(e) {
@@ -393,9 +397,29 @@ async function onInvite(session) {
 
 const { width, height } = useWindowSize()
 
-let { style } = useDraggable(callPopup, {
+const { x, y, style } = useDraggable(callPopup, {
   initialValue: { x: width.value - 280, y: height.value - 310 },
+  containerElement: document.body,
   preventDefault: true,
+  onMove: ({ x, y }) => {
+    const el = callPopup.value
+    if (!el) return
+
+    const { offsetWidth, offsetHeight } = el
+    x.value = Math.min(width.value - offsetWidth, Math.max(0, x))
+    y.value = Math.min(height.value - offsetHeight, Math.max(0, y))
+  }
+})
+
+watch([width, height], () => {
+  const el = callPopup.value
+  if (!el) return
+
+  const { offsetWidth, offsetHeight } = el
+
+  // Adjust position to stay within the viewport
+  x.value = Math.min(width.value - offsetWidth, Math.max(0, x.value))
+  y.value = Math.min(height.value - offsetHeight, Math.max(0, y.value))
 })
 
 async function startupClient() {
@@ -630,7 +654,16 @@ async function makeOutgoingCall(number, sipServer) {
      },
    })
 
-   inviter.invite();
+   activeSession = inviter;
+
+   await userAgent
+     .start()
+     .then(() => {
+       inviter.invite();
+      }).catch((error) => {
+        console.error("Error <callWithTarget-sip>: ", error);
+      });
+
    await getContactDetail(number); 
 
    if(number[0] != "*") {
@@ -640,13 +673,9 @@ async function makeOutgoingCall(number, sipServer) {
    }
 
    inviter.stateChange.addListener((state) => {
-console.log(state)
      switch (state) {
-
        case SessionState.Initial:
-         showCallPopup.value = true
-         activeSession = inviter;
-         break
+         break;
        case SessionState.Establishing:
          callStatus.value = 'ringing';
          activeSession = inviter;
@@ -665,9 +694,9 @@ console.log(state)
          window.dispatchEvent(new CustomEvent('queueEvent', {
           detail: dtmfType
          }));
-         break
-       case SessionState.Terminating:
-          break
+         break;
+      case SessionState.Terminating:
+         break;
       case SessionState.Terminated:
          console.log('Call ended.');
          activeSession = null;

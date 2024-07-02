@@ -1,9 +1,21 @@
 (function() {
-  // Function to create and append a div to the body
+  // Create a new script element
   function createAndAppendDiv(id) {
     const div = document.createElement('div');
     div.id = id;
-    document.body.appendChild(div);
+
+    // Apply special styles and classes to the 'app' div
+    if (id === 'app') {
+        div.classList.add('sticky-top');
+        div.style.zIndex = '2000';
+    }
+
+    var mainSection = document.querySelector('.main-section');
+    if (mainSection) {
+        mainSection.prepend(div);
+    } else {
+        document.body.prepend(div);
+    }
   }
 
   // Create the required div elements
@@ -11,7 +23,6 @@
   createAndAppendDiv('modals');
   createAndAppendDiv('popovers');
 
-  // Create a new script element
   var script = document.createElement('script');
   
   // Create a new link element for the stylesheet
