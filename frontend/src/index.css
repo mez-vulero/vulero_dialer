@@ -34,3 +34,13 @@ select {
   background-size: initial;
   background-position: initial;
 }
+
+.table-multiselect {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    height: auto;
+    padding: 10px;
+    padding-bottom: 5px;
+    gap: 6px;
+}
