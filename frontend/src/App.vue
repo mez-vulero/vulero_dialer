@@ -290,6 +290,7 @@ async function getOrganizationUsers() {
     organizationUsers.value = [];
   }
 }
+
 async function getContactDetail(number) {
   try {
     const formattedNumber = number.replace(/^\+?251/, '0');
@@ -300,21 +301,25 @@ async function getContactDetail(number) {
       contact.value = {
         full_name: contactInfo.data.full_name,
         mobile_no: number,
-        user_link: `/app/${contactInfo.doc_type}/${contactInfo.data.name}`
       }
     } else {
         contact.value = {
           full_name: 'Unknown',
           mobile_no: number,
-          user_link: `/app/${contactInfo.doc_type}/new}`
         }
     }
+
+    if(contactInfo && contactInfo.open_file_name != '') {
+      contact.value.user_link = `/app/${contactInfo.file_doc_type}/${contactInfo.open_file_name}`
+    } else {
+      contact.value.user_link = `/app/${contactInfo.file_doc_type}/new}`
+    }
+
   } catch(e) {
     console.log('contact error', e);
     contact.value = {
       full_name: 'Unknown',
       mobile_no: number,
-      user_link: ''
     }
   }
 }
@@ -323,9 +328,18 @@ async function onInvite(session) {
   showCallPopup.value = true;
   activeSession = session; 
   referer.value = '';
+
   if(session.remoteIdentity && session.remoteIdentity.displayName) {
     let uri = session.remoteIdentity
     let phoneNo = session.remoteIdentity.displayName
+    await getContactDetail(phoneNo);
+  } else if(session.remoteIdentity && session.remoteIdentity.uri.normal.user) {
+    let uri = session.remoteIdentity;
+    let phoneNo = session.remoteIdentity.uri.normal.user;
+    await getContactDetail(phoneNo);
+  } else if(session.remoteIdentity && session.remoteIdentity.uri.raw.user) {
+    let uri = session.remoteIdentity;
+    let phoneNo = session.remoteIdentity.uri.raw.user;
     await getContactDetail(phoneNo);
   }
 
@@ -388,6 +402,7 @@ async function onInvite(session) {
         ringTone.pause();
         cleanupMedia()
         counterUp.value.stop()
+	refreshCallLogs('incoming');
         break;
       default:
         break;
@@ -445,15 +460,25 @@ async function startupClient() {
 
    if (!wsDetails || !wsDetails.result) {
         console.log("Invalid connection details");
-        return;
+      return;
    }
 
   if(connectAttempt > 3) {
      sipServer = wsDetails.result.sec_sip_address;
   }
+console.log(sipServer)
+
+// sipServer = 'etw-pbx-sip1.websprix.com'
+//console.log(sipServer);
+//const wsServer = `wss://etw-pbx-sip2.websprix.com:8089/ws`;
+// uri = UserAgent.makeURI(`sip:${username}@etw-pbx-sip2.websprix.com`);
+// const wsServer = `wss://${sipServer}:8089/ws`;
+// uri = UserAgent.makeURI(`sip:${username}@${sipServer}`);
 
   const wsServer = `wss://${sipServer}:8089/ws`;
   uri = UserAgent.makeURI(`sip:${username}@${sipServer}`);
+
+
 
   uaConfig =
     {
@@ -464,8 +489,11 @@ async function startupClient() {
         },
       },
       delegate: {
+	    onRefer: async (referral) => {
+		console.log(referral)
+            },
   	    onInvite: onInvite,
-  	    onMessage: function(message) {
+	      	    onMessage: function(message) {
     	    console.log("Received SIP message:", message);
   	    },
   	    onRegistered: function() {
@@ -713,6 +741,7 @@ async function makeOutgoingCall(number, sipServer) {
          callStatus.value = ''
          muted.value = false
          counterUp.value.stop()
+	 refreshCallLogs('outgoing');
          break
        default:
          console.log('Unknown session state')
@@ -780,11 +809,13 @@ function toggleCallWindow() {
     showSmallCallWindow.value = !showSmallCallWindow.value
   }
 }
+
 function cleanupMedia() {
   let mediaElement = document.getElementById("remoteAudio");
   mediaElement.srcObject = null;
   mediaElement.pause();
 }
+
 function earlyMediaConfig(inviter) {
   const mediaElement = document.getElementById('remoteAudio')
   const remoteStream =
@@ -824,6 +855,18 @@ function goToContact() {
   window.frappe.open_in_new_tab = true;
   window.frappe.set_route(contact.value.user_link);
   window.frappe.open_in_new_tab = false;
+}
+
+async function refreshCallLogs(type) {
+  if(type == 'incoming') { 
+    await call('vulero_dialer.config.call_log.fetch_and_process_call_logs', {},
+      { headers: { 'X-Frappe-CSRF-Token': window.frappe.csrf_token } }
+    );
+  } else if(type == 'outgoing') {
+    await call('vulero_dialer.config.call_log.fetch_and_process_outgoing_call_logs', {},
+      { headers: { 'X-Frappe-CSRF-Token': window.frappe.csrf_token } }
+    );
+  }
 }
 
 onMounted(async () => {

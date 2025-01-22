@@ -11,8 +11,9 @@
   "extension",
   "organization_id",
   "queue_details_section",
-  "join_dtmf",
+  "queue_name",
   "column_break_vkje",
+  "join_dtmf",
   "leave_dtmf"
  ],
  "fields": [
@@ -58,11 +59,16 @@
    "fieldname": "leave_dtmf",
    "fieldtype": "Data",
    "label": "Leave DTMF"
+  },
+  {
+   "fieldname": "queue_name",
+   "fieldtype": "Data",
+   "label": "Queue Name"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-06-04 20:54:58.999190",
+ "modified": "2024-12-31 13:20:06.643848",
  "modified_by": "Administrator",
  "module": "Vulero Dialer",
  "name": "Extensions",

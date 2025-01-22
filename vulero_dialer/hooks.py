@@ -18,6 +18,11 @@ app_include_js = [
 	"/assets/vulero_dialer/js/call_button.js",
 	"/assets/vulero_dialer/js/connect_status.js"
 	]
+on_login = [
+    "vulero_dialer.config.call_log.fetch_and_process_call_logs", 
+    "vulero_dialer.config.call_log.fetch_and_process_outgoing_call_logs",
+    "vulero_dialer.config.call_log.fetch_and_process_offhour_logs"
+]
 # include js, css files in header of web template
 # web_include_css = "/assets/vulero_dialer/css/vulero_dialer.css"
 # web_include_js = "/assets/vulero_dialer/js/vulero_dialer.js"
@@ -130,19 +135,33 @@ website_route_rules = [
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {
+	# "*": {
+	# 	"on_update": "method",
+	# 	"on_cancel": "method",
+	# 	"on_trash": "method"
+	# }
+    "Call Log" : {
+        "after_insert" : [
+            "vulero_dialer.config.call_log.create_followup_for_missed_call", 
+		]
+	},
+    "Followup" : {
+        "before_save": [
+            "vulero_dialer.config.call_log.update_call_log_on_followup_change"
+		]
+	}
+}
 
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
+#scheduler_events = {
+#	"cron": {
+#		 "* * * * *": [
+#			"vulero_dialer.tasks.run_call_logs"
+#		]
+#	}
 # 		"vulero_dialer.tasks.all"
 # 	],
 # 	"daily": [
@@ -157,7 +176,7 @@ website_route_rules = [
 # 	"monthly": [
 # 		"vulero_dialer.tasks.monthly"
 # 	],
-# }
+#}
 
 # Testing
 # -------

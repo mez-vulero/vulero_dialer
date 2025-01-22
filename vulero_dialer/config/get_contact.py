@@ -9,6 +9,18 @@ def get_contact_info(formattedNumber):
                            order_by='modified desc',
                            limit=1)
 
+    formattedNumberWithCountryCode = '+251' + formattedNumber.lstrip('0')
+
+    open_file = frappe.get_all(settings.open_file,
+                            fields=["name"],
+                            or_filters=[
+                                ("phone", "=", formattedNumber),
+                                ("mobile_no", "=", formattedNumber),
+                                ("phone", "=", formattedNumberWithCountryCode),
+                                ("mobile_no", "=", formattedNumberWithCountryCode)
+                            ],
+                            limit=1)
+
     if contacts and contacts[0]:
         contact = contacts[0]
         first_name = contact.get('first_name', '').strip() if contact.get('first_name') else ''
@@ -18,10 +30,17 @@ def get_contact_info(formattedNumber):
         contact['full_name'] = full_name
     else:
         contact = []
+
+    if open_file and open_file[0]:
+        open_file = open_file[0]
+        open_file_name = open_file.get('name', '').strip();
+    else:
+        open_file_name = ''
     
     response = {
         'doc_type': settings.check_contacts_info_from.lower(),
+        'file_doc_type': settings.open_file.lower(),
+        'open_file_name': open_file_name, 
         'data': contact
     }
     return response
-

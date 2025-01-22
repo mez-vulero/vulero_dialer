@@ -13,6 +13,31 @@ $(document).ready(function() {
         frappe.msgprint('Left the queue');
       }
     });
+	
+
+    frappe.call({
+    	method: 'vulero_dialer.config.queue.get_queue_status',
+    	args: {},
+    	callback: function(response) {
+            if (response.message && response.message.status === "success") {
+                // Get the icon element
+                let icon = $('#queueIcon');
+            
+                // If the user is a member, set the icon to the 'leave' icon
+                if (response.message.is_member) {
+                    icon.attr('src', leaveIconUrl);
+                } else {
+                    // If not a member, set the icon to the 'join' icon
+                    icon.attr('src', joinIconUrl);
+                }
+            } else {
+                console.log("Error:", response.message ? response.message : "Unknown error");
+            }
+        },
+        error: function(err) {
+            console.log("Error calling the method:", err);
+        }
+    });
 
     function appendQueueButton() {
         let queueButton = $(`
@@ -34,20 +59,38 @@ $(document).ready(function() {
 
         bellIcon.after(queueButton);
 
-        // Add event listener for the button
-        $('#queueButton').on('click', function() {
-            let button = $(this);
-            let icon = $('#queueIcon');
-            if (icon.attr('src') === joinIconUrl) {
-                window.dispatchEvent(new CustomEvent('callEvent', {
-                  detail: { number: 'join_queue' }
-                }));
-            } else {
-                window.dispatchEvent(new CustomEvent('callEvent', {
-                  detail: { number: 'leave_queue' }
-                }));
+	$('#queueButton').on('click', function () {
+          let button = $(this);
+          let icon = $('#queueIcon');
+    
+          if (icon.attr('src') === joinIconUrl) {
+            frappe.call({
+              method: "vulero_dialer.config.queue.add_to_queue", // Add to queue method
+              callback: function (response) {
+                if (response.message.message === "added") {
+                  //$('#queueIcon').attr('src', leaveIconUrl);
+                    console.log("Successfully joined the queue.");
+                    icon.attr('src', leaveIconUrl); // Change icon to leave
+                } else {
+                    console.error("Failed to join the queue:", response.message.message);
+                }
             }
-        });
+          });
+          } else {
+            frappe.call({
+              method: "vulero_dialer.config.queue.remove_from_queue", // Remove from queue method
+              callback: function (response) {
+                if (response.message.message === "removed") {
+                  $('#queueIcon').attr('src', joinIconUrl);
+                    console.log("Successfully left the queue.");
+                    icon.attr('src', joinIconUrl); // Change icon to join
+                } else {
+                    console.error("Failed to leave the queue:", response.message);
+                }
+              }
+            });
+          }
+         });
 
         $('head').append(`
             <style>

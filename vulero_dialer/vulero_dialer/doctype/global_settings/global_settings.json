@@ -8,13 +8,14 @@
   "organization_id",
   "api_key",
   "check_contacts_info_from",
+  "open_file",
   "incoming_ringtone"
  ],
  "fields": [
   {
    "fieldname": "organization_id",
    "fieldtype": "Data",
-   "label": "Organization ID"
+   "label": "Customer ID"
   },
   {
    "fieldname": "check_contacts_info_from",
@@ -32,12 +33,18 @@
    "fieldname": "api_key",
    "fieldtype": "Data",
    "label": "API Key"
+  },
+  {
+   "fieldname": "open_file",
+   "fieldtype": "Link",
+   "label": "Open File",
+   "options": "DocType"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-04-23 01:35:21.854599",
+ "modified": "2025-01-10 09:24:08.699942",
  "modified_by": "Administrator",
  "module": "Vulero Dialer",
  "name": "Global Settings",

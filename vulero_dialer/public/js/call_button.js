@@ -41,4 +41,7 @@ $(document).ready(function() {
     addCallButton('Contact', 'phone', 'mobile_no');
     addCallButton('Customer', 'phone', 'mobile_no');
     addCallButton('Student', 'phone', 'mobile_no');
+    addCallButton("Tourist", "mobile_no", "");
+    addCallButton('Followup', 'phone', 'mobile_no');
+
 });
