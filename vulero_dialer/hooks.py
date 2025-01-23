@@ -156,27 +156,27 @@ doc_events = {
 # Scheduled Tasks
 # ---------------
 
-#scheduler_events = {
-#	"cron": {
-#		 "* * * * *": [
-#			"vulero_dialer.tasks.run_call_logs"
-#		]
-#	}
-# 		"vulero_dialer.tasks.all"
-# 	],
-# 	"daily": [
-# 		"vulero_dialer.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"vulero_dialer.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"vulero_dialer.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"vulero_dialer.tasks.monthly"
-# 	],
-#}
+scheduler_events = {
+	# "cron": {
+	# 	 "* * * * *": [
+	# 		"vulero_dialer.tasks.run_call_logs"
+	# 	]
+	# }
+	# 	"vulero_dialer.tasks.all"
+	# ],
+	# "daily": [
+	# 	"vulero_dialer.tasks.daily"
+	# ],
+	"hourly": [
+		"vulero_dialer.config.call_log.fetch_and_process_all_call_logs"
+	],
+	# "weekly": [
+	# 	"vulero_dialer.tasks.weekly"
+	# ],
+	# "monthly": [
+	# 	"vulero_dialer.tasks.monthly"
+	# ],
+}
 
 # Testing
 # -------

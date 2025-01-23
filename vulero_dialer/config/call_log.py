@@ -3,6 +3,7 @@ import requests
 import datetime
 import uuid
 import hashlib
+import re 
 from globedock.utils.assignment import make_assignment, make_followup, make_todo
 from globedock.utils.date import get_due_date
 
@@ -49,11 +50,13 @@ def fetch_and_process_all_call_logs():
                 return {"status": "error", "message": "Failed to fetch calls", "details": response.text}
             
             call_logs = response.json()  # Assuming the response is a JSON list
-            for log in call_logs['result']:
+            sorted_logs = sort_logs_by_date(call_logs['result'])
+            print ("sorted_logs:" , sorted_logs)
+            for log in sorted_logs:
                 process_incoming_call_log (log=log, user_link=user_link)
 
-            frappe.db.commit()  # Commit changes to the database
-            return {"status": "success", "message": "Call logs processed successfully"}
+        frappe.db.commit()  # Commit changes to the database
+        return {"status": "success", "message": "Call logs processed successfully"}
     
     except requests.exceptions.RequestException as e:
         frappe.log_error(str(e), "Fetch and Process Call Logs - Request Exception")
@@ -104,7 +107,8 @@ def fetch_and_process_call_logs():
             return {"status": "error", "message": "Failed to fetch calls", "details": response.text}
         
         call_logs = response.json()  # Assuming the response is a JSON list
-        for log in call_logs['result']:        
+        sorted_logs = sort_logs_by_date(call_logs['result'])
+        for log in sorted_logs:      
             process_incoming_call_log (log=log, user_link=user_link)
                 
         frappe.db.commit()  # Commit changes to the database
@@ -160,7 +164,8 @@ def fetch_and_process_offhour_logs():
             return {"status": "error", "message": "Failed to fetch calls", "details": response.text}
         
         call_logs = response.json()  # Assuming the response is a JSON list
-        for log in call_logs['result']:
+        sorted_logs = sort_logs_by_date(call_logs['result'])
+        for log in sorted_logs:
             # Check if call log already exists
             existing_log = frappe.get_all(
                 "Call Log",
@@ -283,7 +288,9 @@ def process_incoming_call_log (log, user_link=None, off_hour=False):
         format = "%Y-%m-%d %H:%M:%S.%f"
         created_at = datetime.datetime.strptime (log["created_at"], format)
         now = datetime.datetime.now ()
-        if (created_at > now + datetime.timedelta(days=-2)):
+        two_days_ago = now + datetime.timedelta(days=-2)
+        two_hours_ago = now + datetime.timedelta(hours=-2)
+        if (created_at > two_hours_ago):
             if (not off_hour): 
                 if (log["disposition"] == "NO ANSWER"):
                     existing_log = frappe.get_all(
@@ -293,7 +300,7 @@ def process_incoming_call_log (log, user_link=None, off_hour=False):
                                 "from": format_phone_number(log["src"]),
                                 "status": "NO ANSWER",
                                 # "followup_status": ["in", ["Pending", "Failed to Reach"]],
-                                "start_time": [">", now + datetime.timedelta(days=-2)]
+                                "start_time": [">", two_days_ago]
                             },
                             fields=["name", "start_time", "followup_status"],
                             order_by="start_time desc"
@@ -330,6 +337,7 @@ def process_incoming_call_log (log, user_link=None, off_hour=False):
                                         "from": format_phone_number(log["src"]),
                                         "status": "NO ANSWER",
                                         "followup_status": ["in", ["Pending"]],
+                                        "start_time": ["<", log["created_at"]]
                                     },
                                     fields=["name", "start_time"],
                                     order_by="start_time desc"
@@ -385,7 +393,12 @@ def process_incoming_call_log (log, user_link=None, off_hour=False):
         frappe.log_error(str(e), "Process Call Logs - General Exception")
         return {"status": "error", "message": "An unexpected error occurred", "details": str(e)}
     
-import re 
+
+def sort_logs_by_date(logs):
+    # Sort the logs by created_at date in ascending order
+    # This ensures that the logs are processed in chronological order
+    return sorted(logs, key=lambda x: x["created_at"])
+
 
 def format_phone_number(phone_number): 
     # Remove any non-digit characters 
