@@ -281,10 +281,10 @@ def process_incoming_call_log (log, user_link=None, off_hour=False):
     try:
         # 2025-01-05 14:09:32.365421
         format = "%Y-%m-%d %H:%M:%S.%f"
-        if (not off_hour):
-            created_at = datetime.datetime.strptime (log["created_at"], format)
-            now = datetime.datetime.now ()
-            if (created_at > now + datetime.timedelta(days=-2)):
+        created_at = datetime.datetime.strptime (log["created_at"], format)
+        now = datetime.datetime.now ()
+        if (created_at > now + datetime.timedelta(days=-2)):
+            if (not off_hour): 
                 if (log["disposition"] == "NO ANSWER"):
                     existing_log = frappe.get_all(
                             "Call Log",
@@ -307,47 +307,56 @@ def process_incoming_call_log (log, user_link=None, off_hour=False):
                                 call_log.duration =  log["duration"],
                                 call_log.missed_calls += 1
                                 call_log.save (ignore_permissions=True)
+                                frappe.db.commit()  # Commit changes to the database
                             else:
                                 create_incoming_call_log (log, user_link)
-
+                                frappe.db.commit()  # Commit changes to the database
                     else:
                         create_incoming_call_log (log, user_link)
+                        frappe.db.commit()  # Commit changes to the database
                 elif (log["disposition"] == "ANSWERED"):
-                    existing_log = frappe.get_all(
-                                "Call Log",
-                                filters={
-                                    "type": "Incoming",
-                                    "from": format_phone_number(log["src"]),
-                                    "status": "NO ANSWER",
-                                    "followup_status": ["in", ["Pending"]],
-                                },
-                                fields=["name", "start_time"],
-                                order_by="start_time desc"
-                            )
-                    if (existing_log):
-                        for elog in existing_log:
-                            call_log = frappe.get_doc ("Call Log", elog.get ("name"))
-                            call_log.followup_status = "Completed"
-                            call_log.save (ignore_permissions=True)
-                            followups = frappe.get_all(
-                                "Followup",
-                                filters={
-                                    "call_log": call_log.name,
-                                    "status": "Open"
-                                },
-                                fields=["name"]
-                            )
-                            for followup in followups:
-                                followup_doc = frappe.get_doc ("Followup", followup.get ("name"))
-                                followup_doc.status = "Cancelled"
-                                followup_doc.save (ignore_permissions=True)
-                    create_incoming_call_log (log, user_link)
+                    existing_ulog = frappe.get_all(
+                                    "Call Log",
+                                    filters={
+                                        "id": log["id"],
+                                    },
+                                    fields=["name"]
+                                )
+                    if not (existing_ulog):
+                        existing_log = frappe.get_all(
+                                    "Call Log",
+                                    filters={
+                                        "type": "Incoming",
+                                        "from": format_phone_number(log["src"]),
+                                        "status": "NO ANSWER",
+                                        "followup_status": ["in", ["Pending"]],
+                                    },
+                                    fields=["name", "start_time"],
+                                    order_by="start_time desc"
+                                )
+                        if (existing_log):
+                            for elog in existing_log:
+                                call_log = frappe.get_doc ("Call Log", elog.get ("name"))
+                                call_log.followup_status = "Completed"
+                                call_log.save (ignore_permissions=True)
+                                followups = frappe.get_all(
+                                    "Followup",
+                                    filters={
+                                        "call_log": call_log.name,
+                                        "status": "Open"
+                                    },
+                                    fields=["name"]
+                                )
+                                for followup in followups:
+                                    followup_doc = frappe.get_doc ("Followup", followup.get ("name"))
+                                    followup_doc.status = "Cancelled"
+                                    followup_doc.save (ignore_permissions=True)
+                                frappe.db.commit()  # Commit changes to the database
+                        create_incoming_call_log (log, user_link)
+                        frappe.db.commit()  # Commit changes to the database
                 else:
                     create_incoming_call_log (log, user_link)
-        else:
-            created_at = datetime.datetime.strptime (log["created_at"], format)
-            now = datetime.datetime.now ()
-            if (created_at > now + datetime.timedelta(days=-2)):
+            else:
                 existing_log = frappe.get_all(
                         "Call Log",
                         filters={
@@ -369,6 +378,7 @@ def process_incoming_call_log (log, user_link=None, off_hour=False):
                         call_log.save (ignore_permissions=True)
                 else:
                     create_incoming_call_log (log=log, user_link=user_link, off_hour=off_hour)
+
             
         
     except Exception as e:
