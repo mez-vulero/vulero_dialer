@@ -358,6 +358,8 @@ def process_incoming_call_log (log, user_link=None, off_hour=False):
                                 for followup in followups:
                                     followup_doc = frappe.get_doc ("Followup", followup.get ("name"))
                                     followup_doc.status = "Cancelled"
+                                    followup_doc.followup_status = "Answered"
+                                    followup_doc.cancel_reason = "New Incoming Call Answered"
                                     followup_doc.save (ignore_permissions=True)
                                 frappe.db.commit()  # Commit changes to the database
                         create_incoming_call_log (log, user_link)
@@ -488,23 +490,26 @@ def update_call_log_on_followup_change (followup, event):
             if (old_followup):
                 call_log = frappe.get_doc ("Call Log", followup.call_log)
                 call_log_changed = False
-                if (followup.followup_status != old_followup.followup_status):  
+                if (followup.followup_status != old_followup.followup_status or followup.status != old_followup.status):  
                     if (call_log):
-                        if (followup.followup_status == "Failed to Reach"):
-                            call_log.call_log.number_of_retries += 1
-                            call_log.followup_status = "Failed to Reach"
-                            call_log_changed = True
-                            if (call_log.call_log.number_of_retries >= 3):
-                                call_log.followup_status = "Not Reachable"
-                        elif (followup.followup_status == "Answered"):
-                            call_log.followup_status = "Completed"
-                            call_log_changed = True
+                        if (followup.status == "Closed"):
+                            if (followup.followup_status == "Failed to Reach"): 
+                                if (call_log.number_of_retries): call_log.number_of_retries += 1 
+                                else: call_log.number_of_retries = 1 
+                                call_log.followup_status = "Failed to Reach"
+                                call_log_changed = True
+                                if (call_log.number_of_retries >= 3):
+                                    call_log.followup_status = "Not Reachable"
+                            elif (followup.followup_status == "Answered"):
+                                call_log.followup_status = "Completed"
+                                call_log_changed = True
                 if (followup.next_followup_date):
                     if (call_log):
                         if (followup.next_followup_date != old_followup.next_followup_date):
                             call_log.next_followup_date = followup.next_followup_date
                             call_log_changed = True
                 if (call_log_changed):
+                    print (call_log.as_dict ())
                     call_log.save (ignore_permissions=True)
 
     except Exception as e:
