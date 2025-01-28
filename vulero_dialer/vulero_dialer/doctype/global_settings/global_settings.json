@@ -1,0 +1,67 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-04-21 17:25:25.775387",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "organization_id",
+  "api_key",
+  "check_contacts_info_from",
+  "open_file",
+  "incoming_ringtone"
+ ],
+ "fields": [
+  {
+   "fieldname": "organization_id",
+   "fieldtype": "Data",
+   "label": "Customer ID"
+  },
+  {
+   "fieldname": "check_contacts_info_from",
+   "fieldtype": "Link",
+   "label": "Check contacts info from",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "incoming_ringtone",
+   "fieldtype": "Attach",
+   "label": "Incoming Ringtone",
+   "options": ".mp3"
+  },
+  {
+   "fieldname": "api_key",
+   "fieldtype": "Data",
+   "label": "API Key"
+  },
+  {
+   "fieldname": "open_file",
+   "fieldtype": "Link",
+   "label": "Open File",
+   "options": "DocType"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2025-01-10 09:24:08.699942",
+ "modified_by": "Administrator",
+ "module": "Vulero Dialer",
+ "name": "Global Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

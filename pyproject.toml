@@ -1,9 +1,15 @@
 [project]
 name = "vulero_dialer"
 authors = [
+<<<<<<< HEAD
+    { name = "vulerotech", email = "mezmure.dawit@vulero.et"}
+]
+description = "Dialer Modal for Ethiopia"
+=======
     { name = "Vulerotech", email = "mezmure.dawit@vulero.et"}
 ]
 description = "Frappe Dialer app ui for ethiopian call center integration"
+>>>>>>> main
 requires-python = ">=3.10"
 readme = "README.md"
 dynamic = ["version"]

@@ -1,7 +1,12 @@
 app_name = "vulero_dialer"
 app_title = "Vulero Dialer"
+<<<<<<< HEAD
+app_publisher = "vulerotech"
+app_description = "Dialer Modal for Ethiopia"
+=======
 app_publisher = "Vulerotech"
 app_description = "Frappe Dialer app ui for ethiopian call center integration"
+>>>>>>> main
 app_email = "mezmure.dawit@vulero.et"
 app_license = "mit"
 # required_apps = []
@@ -11,8 +16,23 @@ app_license = "mit"
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/vulero_dialer/css/vulero_dialer.css"
+<<<<<<< HEAD
+#app_include_js = "/assets/vulero_dialer/js/vulero_dialer.js"
+app_include_js = [
+	"/assets/vulero_dialer/frontend/call_loader.js",
+	"/assets/vulero_dialer/js/queue_button.js",
+	"/assets/vulero_dialer/js/call_button.js",
+	"/assets/vulero_dialer/js/connect_status.js"
+	]
+on_login = [
+    "vulero_dialer.config.call_log.fetch_and_process_call_logs", 
+    "vulero_dialer.config.call_log.fetch_and_process_outgoing_call_logs",
+    "vulero_dialer.config.call_log.fetch_and_process_offhour_logs"
+]
+=======
 app_include_js = "/assets/vulero_dialer/js/open_dialer.js"
 
+>>>>>>> main
 # include js, css files in header of web template
 # web_include_css = "/assets/vulero_dialer/css/vulero_dialer.css"
 # web_include_js = "/assets/vulero_dialer/js/vulero_dialer.js"
@@ -28,7 +48,12 @@ app_include_js = "/assets/vulero_dialer/js/open_dialer.js"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
+<<<<<<< HEAD
+# doctype_js = {"Lead" : "/assets/vulero_dialer/js/lead_call.js", "Opportunity" : "public/js/opportunity_call.js", "Customer" : "public/js/customer_call.js", "Contact" : "public/js/contact_call.js"}
+
+=======
 # doctype_js = {"doctype" : "public/js/doctype.js"}
+>>>>>>> main
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -48,7 +73,13 @@ app_include_js = "/assets/vulero_dialer/js/open_dialer.js"
 # role_home_page = {
 # 	"Role": "home_page"
 # }
+<<<<<<< HEAD
+website_route_rules = [
+    {"from_route": "/vulero_dialer/<path:app_path>", "to_route": "vulero_dialer"},
+] 
+=======
 
+>>>>>>> main
 # Generators
 # ----------
 
@@ -122,6 +153,25 @@ app_include_js = "/assets/vulero_dialer/js/open_dialer.js"
 # ---------------
 # Hook on document methods and events
 
+<<<<<<< HEAD
+doc_events = {
+	# "*": {
+	# 	"on_update": "method",
+	# 	"on_cancel": "method",
+	# 	"on_trash": "method"
+	# }
+    "Call Log" : {
+        "after_insert" : [
+            "vulero_dialer.config.call_log.create_followup_for_missed_call", 
+		]
+	},
+    "Followup" : {
+        "before_save": [
+            "vulero_dialer.config.call_log.update_call_log_on_followup_change"
+		]
+	}
+}
+=======
 # doc_events = {
 # 	"*": {
 # 		"on_update": "method",
@@ -129,10 +179,34 @@ app_include_js = "/assets/vulero_dialer/js/open_dialer.js"
 # 		"on_trash": "method"
 # 	}
 # }
+>>>>>>> main
 
 # Scheduled Tasks
 # ---------------
 
+<<<<<<< HEAD
+scheduler_events = {
+	# "cron": {
+	# 	 "* * * * *": [
+	# 		"vulero_dialer.tasks.run_call_logs"
+	# 	]
+	# }
+	# 	"vulero_dialer.tasks.all"
+	# ],
+	# "daily": [
+	# 	"vulero_dialer.tasks.daily"
+	# ],
+	"hourly": [
+		"vulero_dialer.config.call_log.fetch_and_process_all_call_logs"
+	],
+	# "weekly": [
+	# 	"vulero_dialer.tasks.weekly"
+	# ],
+	# "monthly": [
+	# 	"vulero_dialer.tasks.monthly"
+	# ],
+}
+=======
 # scheduler_events = {
 # 	"all": [
 # 		"vulero_dialer.tasks.all"
@@ -150,6 +224,7 @@ app_include_js = "/assets/vulero_dialer/js/open_dialer.js"
 # 		"vulero_dialer.tasks.monthly"
 # 	],
 # }
+>>>>>>> main
 
 # Testing
 # -------

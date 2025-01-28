@@ -1,0 +1,59 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"pNyEG5q1O1\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Vulero Dialer</span>\",\"col\":12}},{\"id\":\"RqVG_Y-hrk\",\"type\":\"card\",\"data\":{\"card_name\":\"Setup\",\"col\":4}}]",
+ "creation": "2024-04-06 22:41:34.673030",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 1,
+ "icon": "call",
+ "idx": 0,
+ "indicator_color": "",
+ "is_hidden": 0,
+ "label": "Vulero Dialer",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Setup",
+   "link_count": 2,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Extensions",
+   "link_count": 0,
+   "link_to": "Extensions",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Global Settings",
+   "link_count": 0,
+   "link_to": "Global Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2025-01-01 00:09:13.329635",
+ "modified_by": "Administrator",
+ "module": "Vulero Dialer",
+ "name": "Vulero Dialer",
+ "number_cards": [],
+ "owner": "mezmure.dawit@vulero.et",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 30.0,
+ "shortcuts": [],
+ "title": "Vulero Dialer"
+}
