@@ -57,9 +57,11 @@ on_login = [
 # role_home_page = {
 # 	"Role": "home_page"
 # }
+
 website_route_rules = [
     {"from_route": "/vulero_dialer/<path:app_path>", "to_route": "vulero_dialer"},
 ] 
+
 # Generators
 # ----------
 
@@ -175,6 +177,7 @@ scheduler_events = {
 	# 	"vulero_dialer.tasks.monthly"
 	# ],
 }
+
 # Testing
 # -------
 

@@ -1,9 +1,11 @@
 [project]
 name = "vulero_dialer"
 authors = [
+
     { name = "vulerotech", email = "mezmure.dawit@vulero.et"}
 ]
 description = "Dialer Modal for Ethiopia"
+
 requires-python = ">=3.10"
 readme = "README.md"
 dynamic = ["version"]
