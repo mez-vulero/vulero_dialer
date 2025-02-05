@@ -611,6 +611,7 @@ async function acceptIncomingCall() {
 
 function rejectIncomingCall() {
   activeSession.reject().catch((error) => console.log(error));
+  console.log ("Call Rejected")
   log.value = 'Rejected incoming call'
   showCallPopup.value = false
   if (showSmallCallWindow.value == undefined) {
