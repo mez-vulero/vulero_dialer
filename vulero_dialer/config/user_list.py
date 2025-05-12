@@ -5,7 +5,7 @@ import requests
 @frappe.whitelist(allow_guest=False)
 def fetch_users_to_transfer():
     settings = frappe.get_doc('Global Settings')
-    url = f"https://etw-pbx-cloud1.websprix.com/api/v1/cust_ext/{settings.organization_id}/cust"
+    url = f"https://etw-pbx-cloud1.websprix.com/api/v2/cust_ext/{settings.organization_id}/cust"
     headers = {'x-api-key': settings.api_key}
     try:
         response = requests.get(url, headers=headers)

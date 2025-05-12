@@ -41,7 +41,7 @@ def get_queue_settings():
 
 def make_outgoing_call(organization_id, extension):
     settings = frappe.get_doc('Global Settings')
-    url = f"https://etw-pbx-cloud1.websprix.com/api/v1/onboard//get_ip_info/{organization_id}/{extension}/1"
+    url = f"https://etw-pbx-cloud1.websprix.com/api/v2/onboard//get_ip_info/{organization_id}/{extension}/1"
     headers = {
         'x-api-key': settings.api_key, 
     }

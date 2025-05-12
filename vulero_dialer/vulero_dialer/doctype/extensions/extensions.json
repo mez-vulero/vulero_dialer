@@ -10,6 +10,7 @@
   "user_link",
   "extension",
   "organization_id",
+  "column_break_sggh",
   "queue_details_section",
   "queue_name",
   "column_break_vkje",
@@ -64,11 +65,15 @@
    "fieldname": "queue_name",
    "fieldtype": "Data",
    "label": "Queue Name"
+  },
+  {
+   "fieldname": "column_break_sggh",
+   "fieldtype": "Column Break"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-12-31 13:20:06.643848",
+ "modified": "2025-04-13 11:13:45.222982",
  "modified_by": "Administrator",
  "module": "Vulero Dialer",
  "name": "Extensions",

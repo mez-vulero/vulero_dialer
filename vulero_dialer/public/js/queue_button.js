@@ -14,7 +14,6 @@ $(document).ready(function() {
       }
     });
 	
-
     frappe.call({
     	method: 'vulero_dialer.config.queue.get_queue_status',
     	args: {},
@@ -74,8 +73,14 @@ $(document).ready(function() {
                 } else {
                     console.error("Failed to join the queue:", response.message.message);
                 }
-            }
-          });
+              }
+            });
+            frappe.call({
+              method: "vulero_dialer.config.call_log.fetch_and_process_missed_call_logs", 
+              callback: function (response) {
+	        console.log("Fetched Missed Calls");
+              }
+            });
           } else {
             frappe.call({
               method: "vulero_dialer.config.queue.remove_from_queue", // Remove from queue method
