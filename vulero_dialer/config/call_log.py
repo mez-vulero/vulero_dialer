@@ -51,7 +51,7 @@ def fetch_and_process_all_call_logs():
             
             call_logs = response.json()  # Assuming the response is a JSON list
             sorted_logs = sort_logs_by_date(call_logs['result'])
-            print ("sorted_logs:" , sorted_logs)
+            # print ("sorted_logs:" , sorted_logs)
             for log in sorted_logs:
                 process_incoming_call_log (log=log, user_link=user_link)
 
@@ -142,6 +142,7 @@ def fetch_and_process_offhour_logs():
         user_link = settings.user_link  # employee_user_id
         extension = settings.extension
         queue_name = settings.queue_name
+        queue_name = queue_name.split("Q", 1)[0]
 
         # Fetch global settings for the API key
         global_settings = frappe.get_doc('Global Settings')
@@ -190,6 +191,83 @@ def fetch_and_process_offhour_logs():
                 # # Insert the new call log
                 #  frappe.get_doc(new_call_log).insert(ignore_permissions=True)
                 process_incoming_call_log (log=log, user_link=None, off_hour=True)
+
+        frappe.db.commit()  # Commit changes to the database
+        return {"status": "success", "message": "Call logs processed successfully"}
+    
+    except requests.exceptions.RequestException as e:
+        frappe.log_error(str(e), "Fetch and Process Call Logs - Request Exception")
+        return {"status": "error", "message": "API request failed", "details": str(e)}
+    except Exception as e:
+        frappe.log_error(str(e), "Fetch and Process Call Logs - General Exception")
+        return {"status": "error", "message": "An unexpected error occurred", "details": str(e)}
+
+@frappe.whitelist(allow_guest=False)
+def fetch_and_process_missed_call_logs():
+    """
+    Fetch missed call logs when no agent is online from the external API and process them into the Call Log doctype.
+    """
+    try:
+        # Fetch settings for the current user
+        user = frappe.session.user
+        settings = frappe.get_all(
+            "Extensions",
+            filters={"user_link": user},
+            fields=["user_link", "extension", "queue_name"]
+        )
+        
+        if not settings:
+            return {"status": "error", "message": "Settings not found for the current user"}
+        
+        settings = settings[0]
+        user_link = settings.user_link  # employee_user_id
+        extension = settings.extension
+        queue_name = settings.queue_name
+        queue_name = queue_name.split("Q", 1)[0]
+
+        # Fetch global settings for the API key
+        global_settings = frappe.get_doc('Global Settings')
+
+        # Construct the URL using the fetched extension
+        url = f"https://etw-pbx-cloud1.websprix.com/api/v2/new-report/{global_settings.organization_id}/{queue_name}/noanswer?page=1&per_page=50"
+
+        # Prepare request headers
+        headers = {
+            'x-api-key': global_settings.api_key,
+        }
+
+        # Make the API call
+        response = requests.get(url, headers=headers)
+        if response.status_code not in [200, 201]:
+            frappe.log_error(
+                f"Failed to fetch Missed Calls {response.status_code} - {response.text}",
+                "Missed Call Fetching Error"
+            )
+            return {"status": "error", "message": "Failed to fetch calls", "details": response.text}
+        
+        call_logs = response.json()  # Assuming the response is a JSON list
+        for log in call_logs['result']:
+            # Check if call log already exists
+            existing_log = frappe.get_all(
+                "Call Log",
+                filters={
+                    "id": log['id'],
+                },
+                fields=["id"]
+            )
+            if not existing_log:
+                  new_call_log = {
+                      "doctype": "Call Log",
+                      "id": log['id'],
+                      "type": "MissedCall",
+                      "from": log["phone"],
+                      "to" : log["agent"] if log["agent"] == "NONE" else log["agent"].split("S", 1)[1],
+                      "status": log['status'],
+                      "start_time": log["ctime"]
+                  }
+                  #Insert the new call log
+                  frappe.get_doc(new_call_log).insert(ignore_permissions=True)
+                  #process_incoming_call_log (log=log, user_link=None, off_hour=True)
 
         frappe.db.commit()  # Commit changes to the database
         return {"status": "success", "message": "Call logs processed successfully"}
@@ -281,17 +359,16 @@ def fetch_and_process_outgoing_call_logs():
         frappe.log_error(str(e), "Fetch and Process Call Logs - General Exception")
         return {"status": "error", "message": "An unexpected error occurred", "details": str(e)}
 
-
 def process_incoming_call_log (log, user_link=None, off_hour=False):
     try:
-        # 2025-01-05 14:09:32.365421
-        format = "%Y-%m-%d %H:%M:%S.%f"
-        created_at = datetime.datetime.strptime (log["created_at"], format)
-        now = datetime.datetime.now ()
-        two_days_ago = now + datetime.timedelta(days=-2)
-        two_hours_ago = now + datetime.timedelta(hours=-2)
-        if (created_at > two_hours_ago):
-            if (not off_hour): 
+        if (not off_hour):
+            # 2025-01-05 14:09:32.365421
+            format = "%Y-%m-%d %H:%M:%S.%f"
+            created_at = datetime.datetime.strptime (log["created_at"], format)
+            now = datetime.datetime.now ()
+            two_days_ago = now + datetime.timedelta(days=-2)
+            two_hours_ago = now + datetime.timedelta(hours=-2)
+            if (created_at > two_hours_ago):
                 if (log["disposition"] == "NO ANSWER"):
                     existing_log = frappe.get_all(
                             "Call Log",
@@ -314,6 +391,16 @@ def process_incoming_call_log (log, user_link=None, off_hour=False):
                                 call_log.duration =  log["duration"],
                                 call_log.missed_calls += 1
                                 call_log.save (ignore_permissions=True)
+                                followups = frappe.get_all (
+                                    "Followup",
+                                    filters={
+                                        "call_log": call_log.name,
+                                    }
+                                )
+                                for followup in followups:
+                                    frappe.db.set_value (
+                                        "Followup", followup.name, "missed_calls", call_log.missed_calls  # Update the missed calls count in follow-up
+                                    )  # Update the status of the follow-up
                                 frappe.db.commit()  # Commit changes to the database
                             else:
                                 create_incoming_call_log (log, user_link)
@@ -336,7 +423,7 @@ def process_incoming_call_log (log, user_link=None, off_hour=False):
                                         "type": "Incoming",
                                         "from": format_phone_number(log["src"]),
                                         "status": "NO ANSWER",
-                                        "followup_status": ["in", ["Pending"]],
+                                        "followup_status": ["in", ["Pending", "Failed to Reach"]],
                                         "start_time": ["<", log["created_at"]]
                                     },
                                     fields=["name", "start_time"],
@@ -366,28 +453,28 @@ def process_incoming_call_log (log, user_link=None, off_hour=False):
                         frappe.db.commit()  # Commit changes to the database
                 else:
                     create_incoming_call_log (log, user_link)
-            else:
-                existing_log = frappe.get_all(
-                        "Call Log",
-                        filters={
-                            "type": "OffHour",
-                            "from": format_phone_number(log["src"]),
-                            "status": "Missed Call",
-                            "start_time": [">", now + datetime.timedelta(days=-2)]
-                        },
-                        fields=["name", "start_time"],
-                        order_by="start_time desc"
-                    )
-                if (existing_log):
-                    if (existing_log[0].start_time < created_at):
-                        call_log = frappe.get_doc ("Call Log", existing_log[0].get ("name"))
-                        call_log.start_time = log["created_at"]
-                        call_log.recording_url = log["recording_url"],
-                        call_log.duration =  log["duration"],
-                        call_log.missed_calls += 1
-                        call_log.save (ignore_permissions=True)
-                else:
-                    create_incoming_call_log (log=log, user_link=user_link, off_hour=off_hour)
+        else:
+            # existing_log = frappe.get_all(
+            #         "Call Log",
+            #         filters={
+            #             "type": "OffHour",
+            #             "from": format_phone_number(log["src"]),
+            #             "status": "Missed Call",
+            #             "start_time": [">", now + datetime.timedelta(days=-2)]
+            #         },
+            #         fields=["name", "start_time"],
+            #         order_by="start_time desc"
+            #     )
+            # if (existing_log):
+            #     if (existing_log[0].start_time < created_at):
+            #         call_log = frappe.get_doc ("Call Log", existing_log[0].get ("name"))
+            #         call_log.start_time = log["created_at"]
+            #         call_log.recording_url = log["recording_url"],
+            #         call_log.duration =  log["duration"],
+            #         call_log.missed_calls += 1
+            #         call_log.save (ignore_permissions=True)
+            # else:
+            create_incoming_call_log (log=log, user_link=user_link, off_hour=off_hour)
 
             
         
@@ -474,6 +561,8 @@ def create_followup_for_missed_call (call_log, event):
                 "starts_on": get_due_date() + datetime.timedelta(hours=-1),
                 "event_category": "Call",
                 "followup_from": "Call Log", 
+                "mobile_no": call_log.get("from"),
+                "missed_calls": 1,
                 "call_log": call_log.name,
                 "allocated_to": agent_user_id,
                 "followup_trigger": "New Call Log",
@@ -482,6 +571,7 @@ def create_followup_for_missed_call (call_log, event):
                 # "description" : description
             })
             followup.insert(ignore_permissions=True)
+            frappe.publish_realtime('toast_message', ['New Followup Assigned', 'red'], user=agent_user_id)
 
 def update_call_log_on_followup_change (followup, event):
     try:
@@ -517,3 +607,21 @@ def update_call_log_on_followup_change (followup, event):
         return {"status": "error", "message": "An unexpected error occurred", "details": str(e)}
         
 
+
+def patch_followups ():
+    # patch all followups which have a call_log field populated but no mobile_no field set by getting the mobile_no from the call_log
+    followup_list = frappe.get_all ("Followup", 
+                                    filters={
+                                        "call_log": ["!=", None],
+                                        "missed_calls": ["=", ""]
+                                    },
+                                    fields=["name", "mobile_no", "call_log"])
+    for followup in followup_list:
+        number = frappe.db.get_value ("Call Log", followup.get ("call_log"), "missed_calls")
+        print (number)
+        if number:
+            followup_doc = frappe.get_doc ("Followup", followup.get ("name"))
+            followup_doc.missed_calls = number
+            followup_doc.save ()
+            print (f"Updated missed call count for Followup {followup.name}: {followup.mobile_no}")
+    return {"status": "success", "message": "Followups patched successfully"}

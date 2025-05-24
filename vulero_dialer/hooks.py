@@ -13,17 +13,14 @@ app_license = "mit"
 # app_include_css = "/assets/vulero_dialer/css/vulero_dialer.css"
 #app_include_js = "/assets/vulero_dialer/js/vulero_dialer.js"
 app_include_js = [
-	"/assets/vulero_dialer/frontend/call_loader.js",
-	"/assets/vulero_dialer/js/queue_button.js",
-	"/assets/vulero_dialer/js/call_button.js",
-	"/assets/vulero_dialer/js/connect_status.js"
+	"vulero_dialer.bundle.js"
 	]
 on_login = [
     "vulero_dialer.config.call_log.fetch_and_process_call_logs", 
     "vulero_dialer.config.call_log.fetch_and_process_outgoing_call_logs",
-    "vulero_dialer.config.call_log.fetch_and_process_offhour_logs"
+    "vulero_dialer.config.call_log.fetch_and_process_offhour_logs",
+    "vulero_dialer.config.call_log.fetch_and_process_missed_call_logs"
 ]
-
 # include js, css files in header of web template
 # web_include_css = "/assets/vulero_dialer/css/vulero_dialer.css"
 # web_include_js = "/assets/vulero_dialer/js/vulero_dialer.js"
@@ -40,6 +37,7 @@ on_login = [
 
 # include js in doctype views
 # doctype_js = {"Lead" : "/assets/vulero_dialer/js/lead_call.js", "Opportunity" : "public/js/opportunity_call.js", "Customer" : "public/js/customer_call.js", "Contact" : "public/js/contact_call.js"}
+
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -155,7 +153,6 @@ doc_events = {
 	}
 }
 
-
 # Scheduled Tasks
 # ---------------
 
@@ -180,7 +177,6 @@ scheduler_events = {
 	# 	"vulero_dialer.tasks.monthly"
 	# ],
 }
-
 
 # Testing
 # -------
